@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import ReactDOM from 'react-dom';
 import { createContainer } from 'meteor/react-meteor-data';
 
 import { Tasks } from '../api/tasks.js';
@@ -7,8 +8,40 @@ import Task from './Task.jsx';
 
 // App component - represents the whole app
 class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      hideCompleted: false,
+    };
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+    // Find the text field via the React ref
+    const text = ReactDOM.findDOMNode(this.refs.textInput).value.trim();
+
+    Tasks.insert({
+      text,
+      createdAt: new Date(), // current time
+    });
+
+    // Clear form
+    ReactDOM.findDOMNode(this.refs.textInput).value = '';
+  }
+
+  toggleHideCompleted() {
+    this.setState({
+      hideCompleted: !this.state.hideCompleted,
+    });
+  }
+
   renderTasks() {
-    return this.props.tasks.map((task) => (
+    let filteredTasks = this.props.tasks;
+    if (this.state.hideCompleted) {
+      filteredTasks = filteredTasks.filter(task => !task.checked);
+    }
+    return filteredTasks.map((task) => (
       <Task key={task._id} task={task} />
     ));
   }
@@ -16,29 +49,59 @@ class App extends Component {
   render() {
     return (
       <div className="row">
-      <nav>
-        <div className="nav-wrapper">
-          <div className="col s12">
-            <a href="#" className="brand-logo">Meteor React</a>
+        <nav>
+          <div className="nav-wrapper">
+            <div className="col s12">
+              <a href="#" className="brand-logo">Meteor React</a>
+            </div>
           </div>
-        </div>
-      </nav>
-      <div className="container">
-        <ul className="collection with-header">
-          <li className="collection-header"><h3>Todo List</h3></li>
+        </nav>
+        <div className="container">
+          <header>
+            <h3>Todo List<span className="badge">{this.props.incompleteCount}</span></h3>
+          </header>
+          <form action="#">
+            <p>
+            <input
+              type="checkbox"
+              id="checkHideCompleted"
+              className="filled-in"
+              readOnly
+              checked={this.state.hideCompleted}
+              onClick={this.toggleHideCompleted.bind(this)}
+            />
+          <label htmlFor="checkHideCompleted">Hide Complete</label>
+            </p>
+          </form>
+          <div className="row">
+            <form className="col s12" onSubmit={this.handleSubmit.bind(this)}>
+              <div className="input-field col s12">
+                <input
+                  type="text"
+                  id="newTask"
+                  ref="textInput"
+                  className="validate"
+                  />
+                <label htmlFor="newTask">New Task</label>
+              </div>
+            </form>
+          </div>
+          <ul className="collection">
           {this.renderTasks()}
-        </ul>
+          </ul>
         </div>
       </div>
     );
   }
 }
+
 App.propTypes = {
   tasks: PropTypes.array.isRequired,
 };
 
 export default createContainer(() => {
   return {
-    tasks: Tasks.find({}).fetch(),
+    tasks: Tasks.find({}, {sort: { createdAt: -1}}).fetch(),
+    incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
   };
 }, App);

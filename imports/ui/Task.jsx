@@ -1,10 +1,37 @@
 import React, { Component, PropTypes } from 'react';
 
+import { Tasks } from '../api/tasks.js';
+
 // Task component - represents a single todo item
 export default class Task extends Component {
+  toggleChecked() {
+    // Set the checked property to the opposite of its current value
+    Tasks.update(this.props.task._id, {
+      $set: { checked: !this.props.task.checked },
+    });
+  }
+
+  deleteThisTask() {
+    Tasks.remove(this.props.task._id);
+    Materialize.toast('Task ' + this.props.task.text +
+      ' has been removed', 4000)
+  }
+
   render() {
+    const taskClassName = this.props.task.checked ?
+      'collection-item active' : 'collection-item';
     return (
-      <li className="collection-item">{this.props.task.text}</li>
+      <a href="#" className={taskClassName}
+        onClick={this.toggleChecked.bind(this)}>
+        <div>
+          {this.props.task.text}
+          <span href="#!" className="secondary-content">
+            <i className="material-icons" onClick={this.deleteThisTask.bind(this)}>
+              delete
+            </i>
+          </span>
+        </div>
+      </a>
     );
   }
 }
