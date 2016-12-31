@@ -24,7 +24,10 @@ export default class Task extends Component {
       <a href="#" className={taskClassName}
         onClick={this.toggleChecked.bind(this)}>
         <div>
+          <span className="text">
+          <strong>Added by {this.props.task.username} | </strong>
           {this.props.task.text}
+        </span>
           <span href="#!" className="secondary-content">
             <i className="material-icons" onClick={this.deleteThisTask.bind(this)}>
               delete

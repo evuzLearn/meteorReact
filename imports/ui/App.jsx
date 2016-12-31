@@ -5,6 +5,7 @@ import { createContainer } from 'meteor/react-meteor-data';
 import { Tasks } from '../api/tasks.js';
 
 import Task from './Task.jsx';
+import AccountsUIWrapper from './AccountsUIWrappers.jsx';
 
 // App component - represents the whole app
 class App extends Component {
@@ -24,6 +25,8 @@ class App extends Component {
     Tasks.insert({
       text,
       createdAt: new Date(), // current time
+      owner: Meteor.userId(),
+      username: Meteor.user().username,
     });
 
     // Clear form
@@ -62,30 +65,33 @@ class App extends Component {
           </header>
           <form action="#">
             <p>
-            <input
-              type="checkbox"
-              id="checkHideCompleted"
-              className="filled-in"
-              readOnly
-              checked={this.state.hideCompleted}
-              onClick={this.toggleHideCompleted.bind(this)}
-            />
-          <label htmlFor="checkHideCompleted">Hide Complete</label>
+              <input
+                type="checkbox"
+                id="checkHideCompleted"
+                className="filled-in"
+                readOnly
+                checked={this.state.hideCompleted}
+                onClick={this.toggleHideCompleted.bind(this)}
+              />
+              <label htmlFor="checkHideCompleted">Hide Complete</label>
             </p>
           </form>
-          <div className="row">
-            <form className="col s12" onSubmit={this.handleSubmit.bind(this)}>
-              <div className="input-field col s12">
-                <input
-                  type="text"
-                  id="newTask"
-                  ref="textInput"
-                  className="validate"
-                  />
-                <label htmlFor="newTask">New Task</label>
-              </div>
-            </form>
-          </div>
+          <AccountsUIWrapper />
+          { this.props.currentUser ?
+            <div className="row">
+              <form className="col s12" onSubmit={this.handleSubmit.bind(this)}>
+                <div className="input-field col s12">
+                  <input
+                    type="text"
+                    id="newTask"
+                    ref="textInput"
+                    className="validate"
+                    />
+                  <label htmlFor="newTask">New Task</label>
+                </div>
+              </form>
+            </div> : " "
+          }
           <ul className="collection">
           {this.renderTasks()}
           </ul>
@@ -97,11 +103,14 @@ class App extends Component {
 
 App.propTypes = {
   tasks: PropTypes.array.isRequired,
+  incompleteCount: PropTypes.number.isRequired,
+  currentUser: PropTypes.object,
 };
 
 export default createContainer(() => {
   return {
     tasks: Tasks.find({}, {sort: { createdAt: -1}}).fetch(),
     incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
+    currentUser: Meteor.user(),
   };
 }, App);
