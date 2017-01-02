@@ -22,12 +22,7 @@ class App extends Component {
     // Find the text field via the React ref
     const text = ReactDOM.findDOMNode(this.refs.textInput).value.trim();
 
-    Tasks.insert({
-      text,
-      createdAt: new Date(), // current time
-      owner: Meteor.userId(),
-      username: Meteor.user().username,
-    });
+    Meteor.call('tasks.insert', text);
 
     // Clear form
     ReactDOM.findDOMNode(this.refs.textInput).value = '';
@@ -54,15 +49,14 @@ class App extends Component {
       <div className="row">
         <nav>
           <div className="nav-wrapper">
-            <div className="col s12">
-              <a href="#" className="brand-logo">Meteor React</a>
-            </div>
+            <a href="#" className="brand-logo">Meteor React</a>
           </div>
         </nav>
         <div className="container">
           <header>
             <h3>Todo List<span className="badge">{this.props.incompleteCount}</span></h3>
           </header>
+          <AccountsUIWrapper />
           <form action="#">
             <p>
               <input
@@ -76,7 +70,6 @@ class App extends Component {
               <label htmlFor="checkHideCompleted">Hide Complete</label>
             </p>
           </form>
-          <AccountsUIWrapper />
           { this.props.currentUser ?
             <div className="row">
               <form className="col s12" onSubmit={this.handleSubmit.bind(this)}>
